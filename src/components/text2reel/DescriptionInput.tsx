@@ -1,14 +1,14 @@
 'use client'
 
-import { useForm } from '@tanstack/react-form'
-import type { FieldApi } from '@tanstack/react-form'
+import { useForm, FieldApi } from '@tanstack/react-form'
 import { useText2ReelStore } from '@/store/useText2ReelStore'
+import { MusicNote, Palette, Schedule, Bolt } from '@mui/icons-material'
 
-function FieldInfo({ field }: { field: any }) {
+function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
     return (
         <>
             {field.state.meta.touchedErrors ? (
-                <em className="text-red-500 text-sm absolute -bottom-6 left-0">{field.state.meta.touchedErrors}</em>
+                <em className="text-red-500 text-[10px] absolute -bottom-5 left-4 font-bold uppercase tracking-wider">{field.state.meta.touchedErrors}</em>
             ) : null}
         </>
     )
@@ -38,12 +38,13 @@ export default function DescriptionInput({ onSubmit }: DescriptionInputProps) {
                     e.stopPropagation()
                     form.handleSubmit()
                 }}
+                className="flex flex-col"
             >
                 <form.Field
                     name="description"
                     validators={{
                         onChange: ({ value }) =>
-                            !value ? 'A description is required' : undefined,
+                            !value ? 'The vision is empty...' : undefined,
                     }}
                 >
                     {(field) => (
@@ -53,46 +54,48 @@ export default function DescriptionInput({ onSubmit }: DescriptionInputProps) {
                                 value={field.state.value}
                                 onBlur={field.handleBlur}
                                 onChange={(e) => field.handleChange(e.target.value)}
-                                placeholder="Describe your video idea..."
-                                className="w-full h-24 bg-black/40 text-[#FFD9CC] p-4 rounded-2xl border border-[#F79A7A]/30 focus:border-[#F79A7A] focus:ring-1 focus:ring-[#F79A7A] outline-none transition-all placeholder:text-gray-600 resize-none font-sans text-base backdrop-blur-sm"
+                                placeholder="Describe 'The Vision' for your cinematic scene here..."
+                                className="w-full bg-transparent border-none focus:ring-0 p-6 text-[#FFD9CC] placeholder:text-slate-600 resize-none min-h-[160px] text-lg leading-relaxed font-sans scrollbar-hide"
                                 disabled={isLoading}
                             />
                             <FieldInfo field={field} />
 
-                            <div className="mt-3 flex flex-wrap gap-2">
-                                <span className="text-[10px] text-[#F79A7A] uppercase tracking-wider font-extrabold py-1">Try:</span>
-                                {[
-                                    "A futuristic tech intro",
-                                    "A calm nature scene",
-                                    "A high-energy gym intro",
-                                ].map((prompt) => (
-                                    <button
-                                        key={prompt}
-                                        type="button"
-                                        onClick={() => field.handleChange(prompt)}
-                                        className="text-xs bg-[#F79A7A]/10 hover:bg-[#F79A7A]/20 border border-[#F79A7A]/20 text-[#FFD9CC] px-4 py-1.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95"
-                                    >
-                                        {prompt}
+                            <div className="flex items-center justify-between p-4 bg-primary/5 border-t border-primary/10">
+                                <div className="flex items-center gap-4">
+                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group">
+                                        <MusicNote fontSize="small" className="group-hover:scale-110 transition-transform" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Beat Sync</span>
                                     </button>
-                                ))}
+                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group">
+                                        <Palette fontSize="small" className="group-hover:scale-110 transition-transform" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Mood</span>
+                                    </button>
+                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group">
+                                        <Schedule fontSize="small" className="group-hover:scale-110 transition-transform" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Duration</span>
+                                    </button>
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="bg-primary/20 text-primary border border-primary/30 font-black px-5 py-2 rounded-xl text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-primary/30 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {isLoading ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                            Igniting...
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Bolt fontSize="small" />
+                                            Generate Blueprint
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     )}
                 </form.Field>
-                <div className="mt-6 flex justify-end">
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="px-8 py-3 bg-[#F79A7A] hover:bg-[#FBC3AD] active:bg-[#E56F4C] disabled:opacity-50 disabled:cursor-not-allowed text-black font-extrabold rounded-xl transition-all shadow-[0_0_20px_rgba(247,154,122,0.3)] hover:shadow-[0_0_30px_rgba(247,154,122,0.5)] transform hover:-translate-y-0.5"
-                    >
-                        {isLoading ? (
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                Generating...
-                            </div>
-                        ) : 'Generate Scenes'}
-                    </button>
-                </div>
             </form>
         </div>
     )
