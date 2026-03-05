@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${outfit.variable} ${inter.variable} font-sans antialiased bg-[#0f0518] text-[#FFD9CC]`}
+        className={`${outfit.variable} ${inter.variable} font-sans antialiased bg-background-dark text-[#FFD9CC]`}
       >
         {children}
       </body>

@@ -1,14 +1,14 @@
 'use client'
 
-import { useForm, FieldApi } from '@tanstack/react-form'
+import { useForm } from '@tanstack/react-form'
 import { useText2ReelStore } from '@/store/useText2ReelStore'
 import { MusicNote, Palette, Schedule, Bolt } from '@mui/icons-material'
 
-function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
+function FieldInfo({ error }: { error?: string | null }) {
     return (
         <>
-            {field.state.meta.touchedErrors ? (
-                <em className="text-red-500 text-[10px] absolute -bottom-5 left-4 font-bold uppercase tracking-wider">{field.state.meta.touchedErrors}</em>
+            {error ? (
+                <em className="text-red-500 text-[10px] absolute -bottom-5 left-4 font-bold uppercase tracking-wider">{error}</em>
             ) : null}
         </>
     )
@@ -58,7 +58,7 @@ export default function DescriptionInput({ onSubmit }: DescriptionInputProps) {
                                 className="w-full bg-transparent border-none focus:ring-0 p-6 text-[#FFD9CC] placeholder:text-slate-600 resize-none min-h-[160px] text-lg leading-relaxed font-sans scrollbar-hide"
                                 disabled={isLoading}
                             />
-                            <FieldInfo field={field} />
+                            <FieldInfo error={field.state.meta.errors?.[0] ? String(field.state.meta.errors[0]) : null} />
 
                             <div className="flex items-center justify-between p-4 bg-primary/5 border-t border-primary/10">
                                 <div className="flex items-center gap-4">

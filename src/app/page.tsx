@@ -5,7 +5,9 @@ import Image from 'next/image'
 import DescriptionInput from '@/components/text2reel/DescriptionInput'
 import SceneGrid from '@/components/text2reel/SceneGrid'
 import VideoPreview from '@/components/text2reel/VideoPreview'
+import LandingPage from '@/components/text2reel/LandingPage'
 import { useText2ReelStore } from '@/store/useText2ReelStore'
+import { useState } from 'react'
 import {
   MovieFilter,
   Dashboard,
@@ -23,6 +25,7 @@ const queryClient = new QueryClient()
 
 function Text2ReelContent() {
   const { scenes, setScenes, setIsLoading } = useText2ReelStore()
+  const [showWorkspace, setShowWorkspace] = useState(false)
 
   const mutation = useMutation({
     mutationFn: async (description: string) => {
@@ -47,9 +50,14 @@ function Text2ReelContent() {
     }
   })
 
+  if (!showWorkspace) {
+    return <LandingPage onGetStarted={() => setShowWorkspace(true)} />
+  }
+
   return (
-    <div className="flex h-screen w-full bg-background-dark text-[#FFD9CC] font-sans selection:bg-primary/30">
-      <div className="absolute inset-0 bg-linear-to-t from-background-dark via-transparent to-transparent opacity-80 z-10" />
+    <div className="flex h-screen w-full bg-background-dark text-[#FFD9CC] font-sans selection:bg-primary/30 relative">
+      <div className="absolute inset-0 bg-linear-to-t from-background-dark via-transparent to-transparent opacity-40 z-0 pointer-events-none" />
+
       {/* Side Navigation */}
       <aside className="w-20 lg:w-64 border-r border-primary/10 flex flex-col glass-panel z-50">
         <div className="p-6 flex items-center gap-3">
@@ -90,7 +98,11 @@ function Text2ReelContent() {
         </nav>
 
         <div className="p-4 border-t border-primary/10">
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-surface-dark border border-primary/5 cursor-pointer hover:border-primary/20 transition-all">
+          <div
+            className="flex items-center gap-3 p-2 rounded-xl bg-surface-dark border border-primary/5 cursor-pointer hover:border-primary/20 transition-all"
+            onClick={() => setShowWorkspace(false)}
+            title="Back to Landing Page"
+          >
             <div className="size-8 rounded-full bg-primary/20 overflow-hidden border border-primary/10">
               <Image
                 src="/logo.svg"
@@ -110,24 +122,13 @@ function Text2ReelContent() {
       </aside>
 
       {/* Main Workspace Area */}
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Background Image with Overlay */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <Image
-            src="/text2reel.png"
-            alt="Background"
-            fill
-            className="object-cover opacity-10"
-            priority
-          />
-        </div>
-
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative z-10">
         {/* Left Panel: Editor */}
         <section className="flex-1 flex flex-col overflow-y-auto no-scrollbar border-r border-primary/10 p-6 lg:p-8 space-y-8 atmospheric-glow relative z-10 custom-scrollbar">
           {/* Header Info */}
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="font-display text-3xl font-extrabold text-[#FFD9CC] leading-tight">Vision Workspace</h2>
+              <h2 className="font-display text-3xl font-extrabold text-[#FFD9CC] leading-tight text-shadow-glow">Vision Workspace</h2>
               <p className="text-slate-400 mt-1 italic">Transform text into rhythmic reels</p>
             </div>
             <button
