@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Archive, Play, Clock, Edit2 } from 'lucide-react'
+import { Archive, Clock, Edit2 } from 'lucide-react'
 import { useText2ReelStore, type Scene } from '@/store/useText2ReelStore'
 
 interface Project {
