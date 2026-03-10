@@ -1,7 +1,43 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { HeroSection } from '@/components/ui/HeroSection';
-import DemoPlayer from './DemoPlayer';
 import { Sparkles, BookOpen, Crown, Zap, Shield, Database, Layout, PenTool, Tv } from 'lucide-react';
+
+const DEMO_VIDEOS = ['/demo1.mp4', '/demo2.webm', '/demo3.mp4'];
+
+function DemoVideoPlayer() {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const handleVideoEnd = () => {
+        setCurrentIndex(prev => (prev + 1) % DEMO_VIDEOS.length);
+    };
+
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.load();
+            videoRef.current.play().catch(() => { });
+        }
+    }, [currentIndex]);
+
+    return (
+        <video
+            ref={videoRef}
+            key={currentIndex}
+            src={DEMO_VIDEOS[currentIndex]}
+            onEnded={handleVideoEnd}
+            autoPlay
+            muted
+            playsInline
+            style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+            }}
+        />
+    );
+}
 
 interface LandingPageProps {
     onGetStarted: () => void;
@@ -32,11 +68,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 }
                 tagline="The most efficient bridge between human imagination and rhythmic cinematic reality ever built. Turn any story into a high-octane 9:16 reel instantly."
                 buttonText="Ignite Vision"
-                imageUrl="/text2reel.png"
-                videoUrl="https://www.w3schools.com/html/mov_bbb.mp4"
                 logoUrl="/logo.png"
                 navItems={navItems}
-                renderPreview={() => <DemoPlayer />}
+                renderPreview={() => <DemoVideoPlayer />}
             />
 
             {/* Features Section */}
