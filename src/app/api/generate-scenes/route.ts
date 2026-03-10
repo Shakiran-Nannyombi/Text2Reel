@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import Groq from 'groq-sdk'
 
+export const dynamic = 'force-dynamic';
+
 const RequestSchema = z.object({
     prompt: z.string().min(1),
 })

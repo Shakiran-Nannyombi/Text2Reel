@@ -12,10 +12,13 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+export const viewport = {
+  themeColor: "#0f0518",
+};
+
 export const metadata: Metadata = {
   title: "Text2Reel | Cinematic AI Video Generator",
   description: "Transform your vision into rhythmic reels with neural AI.",
-  themeColor: "#0f0518",
   icons: {
     icon: [
       { url: "/logo.png" },

@@ -20,6 +20,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  output: 'standalone',
+  // Ensure Tailwind 4 process correctly by ignoring some fallback CSS restrictions
+  webpack: (config) => {
+    config.resolve.fallback = { fs: false, path: false };
+    return config;
+  },
+  turbopack: {}, // explicitly disable/acknowledge Turbopack conflict
 };
 
 export default nextConfig;
