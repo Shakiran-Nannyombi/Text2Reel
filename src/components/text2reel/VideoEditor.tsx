@@ -4,27 +4,27 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { useText2ReelStore } from '@/store/useText2ReelStore'
 import {
-    Add,
-    Tune,
-    ColorLens,
-    Blender,
-    AutoFixHigh,
-    MusicNote,
-    PlayArrow,
-    Delete,
-    PhotoCamera,
-    FlipCameraAndroid,
-    CheckCircle
-} from '@mui/icons-material'
+    Plus,
+    Sliders,
+    Palette,
+    Wand2,
+    Sparkles,
+    Music,
+    Play,
+    Trash2,
+    Camera,
+    ArrowRightLeft,
+    CheckCircle2
+} from 'lucide-react'
 import IconRenderer from './IconRenderer'
 
 const TRANSITIONS = [
-    { id: 'none', label: 'None', emoji: '✖' },
-    { id: 'fade', label: 'Fade', emoji: '🌫' },
-    { id: 'slide', label: 'Slide', emoji: '➡' },
-    { id: 'zoom', label: 'Zoom', emoji: '🔍' },
-    { id: 'spin', label: 'Spin', emoji: '🔄' },
-    { id: 'flash', label: 'Flash', emoji: '⚡' },
+    { id: 'none', label: 'None' },
+    { id: 'fade', label: 'Fade' },
+    { id: 'slide', label: 'Slide' },
+    { id: 'zoom', label: 'Zoom' },
+    { id: 'spin', label: 'Spin' },
+    { id: 'flash', label: 'Flash' },
 ]
 
 const FILTERS = [
@@ -35,6 +35,8 @@ const FILTERS = [
     { id: 'warm', label: 'Warm', css: 'sepia(0.4) saturate(1.2)' },
     { id: 'cool', label: 'Cool', css: 'hue-rotate(180deg) saturate(0.9)' },
     { id: 'neon', label: 'Neon', css: 'hue-rotate(90deg) saturate(2) contrast(1.3)' },
+    { id: 'vintage', label: 'Vintage', css: 'sepia(0.8) contrast(1.2) brightness(0.9)' },
+    { id: 'dream', label: 'Dreamy', css: 'contrast(0.9) brightness(1.2) saturate(1.5)' },
 ]
 
 const EFFECTS = [
@@ -43,6 +45,8 @@ const EFFECTS = [
     { id: 'waves', label: 'Waves' },
     { id: 'gradient-pulse', label: 'Pulse' },
     { id: 'gradient', label: 'Gradient' },
+    { id: 'scanlines', label: 'VHS Scanlines' },
+    { id: 'stars', label: 'Starfield' },
 ]
 
 type EditorTab = 'transitions' | 'filters' | 'effects' | 'color' | 'audio'
@@ -57,7 +61,7 @@ export default function VideoEditor() {
     if (scenes.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-full p-12 text-center opacity-50">
-                <PlayArrow sx={{ fontSize: 64 }} className="text-primary/30 mb-4" />
+                <Play size={64} className="text-primary/30 mb-4" />
                 <p className="text-slate-400 text-sm italic">Generate a vision first to start editing.</p>
             </div>
         )
@@ -113,7 +117,7 @@ export default function VideoEditor() {
                                         className="absolute inset-0 bg-primary/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
                                         title="Paste selected media"
                                     >
-                                        <PhotoCamera className="text-background-dark mb-1" fontSize="small" />
+                                        <Camera size={20} className="text-background-dark mb-1" />
                                         <span className="text-[8px] font-black text-background-dark uppercase">Paste Asset</span>
                                     </button>
                                 )}
@@ -121,8 +125,8 @@ export default function VideoEditor() {
 
                             {/* Transition connector between scenes */}
                             {i < scenes.length - 1 && (
-                                <div className="text-slate-600 text-xs px-0.5 shrink-0">
-                                    {TRANSITIONS.find(t => t.id === ((scene as unknown as { transition?: string }).transition))?.emoji ?? '➡'}
+                                <div className="text-slate-600 px-0.5 shrink-0">
+                                    <ArrowRightLeft size={12} />
                                 </div>
                             )}
                         </div>
@@ -142,7 +146,7 @@ export default function VideoEditor() {
                         className="ml-2 size-14 rounded-xl border-2 border-dashed border-primary/20 flex flex-col items-center justify-center text-primary/40 hover:text-primary hover:border-primary/50 transition-all shrink-0 group cursor-pointer"
                         title="Add Empty Scene"
                     >
-                        <Add />
+                        <Plus size={24} />
                         <span className="text-[7px] font-black uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100">Add</span>
                     </button>
                 </div>
@@ -203,8 +207,15 @@ export default function VideoEditor() {
                         </div>
 
                         {/* Delete scene */}
-                        <button className="flex items-center gap-1 text-red-400 hover:text-red-300 text-[9px] uppercase tracking-widest font-bold transition-colors cursor-pointer mt-auto">
-                            <Delete sx={{ fontSize: 12 }} /> Remove
+                        <button
+                            onClick={() => {
+                                const newScenes = scenes.filter((_, idx) => idx !== selectedSceneIndex)
+                                setScenes(newScenes)
+                                setSelectedSceneIndex(Math.max(0, selectedSceneIndex - 1))
+                            }}
+                            className="flex items-center gap-1 text-red-400 hover:text-red-300 text-[9px] uppercase tracking-widest font-bold transition-colors cursor-pointer mt-auto"
+                        >
+                            <Trash2 size={12} /> Remove
                         </button>
                     </div>
 
@@ -213,11 +224,11 @@ export default function VideoEditor() {
                         {/* Tab bar */}
                         <div className="flex border-b border-primary/10 bg-black/20 shrink-0 overflow-x-auto">
                             {([
-                                { id: 'transitions', icon: <FlipCameraAndroid sx={{ fontSize: 14 }} />, label: 'Transition' },
-                                { id: 'filters', icon: <AutoFixHigh sx={{ fontSize: 14 }} />, label: 'Filter' },
-                                { id: 'effects', icon: <Blender sx={{ fontSize: 14 }} />, label: 'Effect' },
-                                { id: 'color', icon: <ColorLens sx={{ fontSize: 14 }} />, label: 'Color' },
-                                { id: 'audio', icon: <MusicNote sx={{ fontSize: 14 }} />, label: 'Audio' },
+                                { id: 'transitions', icon: <ArrowRightLeft size={14} />, label: 'Transition' },
+                                { id: 'filters', icon: <Sparkles size={14} />, label: 'Filter' },
+                                { id: 'effects', icon: <Wand2 size={14} />, label: 'Effect' },
+                                { id: 'color', icon: <Palette size={14} />, label: 'Color' },
+                                { id: 'audio', icon: <Music size={14} />, label: 'Audio' },
                             ] as { id: EditorTab; icon: React.ReactNode; label: string }[]).map(tab => (
                                 <button
                                     key={tab.id}
@@ -246,12 +257,11 @@ export default function VideoEditor() {
                                                 <button
                                                     key={t.id}
                                                     onClick={() => updateScene(selectedSceneIndex, { ...selectedScene, transition: t.id } as never)}
-                                                    className={`glass-panel rounded-xl p-3 flex flex-col items-center gap-1 border transition-all ${active ? 'border-primary bg-primary/10 shadow-[0_0_10px_rgba(247,154,122,0.2)]' : 'border-primary/10 hover:border-primary/30'
+                                                    className={`glass-panel rounded-xl py-4 px-2 flex flex-col items-center justify-center gap-2 border transition-all ${active ? 'border-primary bg-primary/10 shadow-[0_0_10px_rgba(247,154,122,0.2)]' : 'border-primary/10 hover:border-primary/30'
                                                         }`}
                                                 >
-                                                    <span className="text-xl">{t.emoji}</span>
-                                                    <span className="text-[8px] uppercase tracking-widest text-slate-400">{t.label}</span>
-                                                    {active && <CheckCircle sx={{ fontSize: 10 }} className="text-primary" />}
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#FFD9CC]">{t.label}</span>
+                                                    {active && <CheckCircle2 size={12} className="text-primary" />}
                                                 </button>
                                             )
                                         })}
@@ -306,7 +316,7 @@ export default function VideoEditor() {
                                                         }`}
                                                 >
                                                     <span className="text-xs font-bold text-[#FFD9CC]">{effect.label}</span>
-                                                    {active && <CheckCircle sx={{ fontSize: 14 }} className="text-primary" />}
+                                                    {active && <CheckCircle2 size={14} className="text-primary" />}
                                                 </button>
                                             )
                                         })}
@@ -361,7 +371,7 @@ export default function VideoEditor() {
                                                     onClick={() => updateScene(selectedSceneIndex, { ...selectedScene, imageUrl: '', videoUrl: '' })}
                                                     className="absolute top-2 right-2 bg-red-500/80 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                                 >
-                                                    <Delete sx={{ fontSize: 12 }} />
+                                                    <Trash2 size={12} />
                                                 </button>
                                             </div>
                                         ) : (
@@ -380,7 +390,7 @@ export default function VideoEditor() {
                                 <div className="space-y-3">
                                     <p className="text-[9px] text-slate-500 uppercase tracking-widest">Background audio for the full reel is set in the Assets tab. Scene-level audio overrides coming soon.</p>
                                     <div className="glass-panel rounded-xl p-4 border border-primary/10 space-y-2">
-                                        <Tune className="text-primary/40" fontSize="large" />
+                                        <Sliders size={32} className="text-primary/40" />
                                         <p className="text-xs text-slate-400 italic">Go to <strong>Assets → Audio Library</strong> to select a track for the whole reel.</p>
                                     </div>
                                 </div>

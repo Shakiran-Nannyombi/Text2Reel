@@ -26,7 +26,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true, project: { ...project, scenes: JSON.parse(project.scenes) } })
     } catch (err) {
         console.error('[projects/save] error:', err)
-        return NextResponse.json({ error: 'Failed to save project' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to save project', details: err instanceof Error ? err.message : String(err) }, { status: 500 })
     }
 }
 

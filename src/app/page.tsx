@@ -7,7 +7,10 @@ import DescriptionInput from '@/components/text2reel/DescriptionInput'
 import SceneGrid from '@/components/text2reel/SceneGrid'
 import VideoPreview from '@/components/text2reel/VideoPreview'
 import VideoEditor from '@/components/text2reel/VideoEditor'
+import ProjectsList from '@/components/text2reel/ProjectsList'
+import SettingsPage from '@/components/text2reel/SettingsPage'
 import LandingPage from '@/components/text2reel/LandingPage'
+import { Toaster, toast } from 'react-hot-toast'
 import { useText2ReelStore, type Scene, type UserAsset } from '@/store/useText2ReelStore'
 
 interface CloudTrack {
@@ -26,20 +29,22 @@ interface CloudImage {
 }
 import { useState, useRef, useEffect } from 'react'
 import {
-  Dashboard,
-  AutoStories,
+  LayoutDashboard,
+  BookOpen,
   FolderOpen,
+  Archive,
   Settings,
-  Help,
-  UnfoldMore,
-  IosShare,
-  AutoAwesome,
-  ViewQuilt,
-  PlayArrow,
+  HelpCircle,
+  Expand,
+  Share,
+  Sparkles,
+  LayoutGrid,
+  Play,
   Pause,
-  CloudUpload,
-  Audiotrack
-} from '@mui/icons-material'
+  Upload,
+  Music,
+  LogOut
+} from 'lucide-react'
 
 const queryClient = new QueryClient()
 
@@ -49,13 +54,19 @@ function Text2ReelContent() {
     activeAudioTrack, setActiveAudioTrack,
     userAssets, addUserAsset,
     selectedAssetUrl, setSelectedAssetUrl,
-    setIsLoading
+    setIsLoading,
+    showWorkspace, setShowWorkspace,
+    activeView, setActiveView
   } = useText2ReelStore()
-  const [showWorkspace, setShowWorkspace] = useState(false)
-  const [activeView, setActiveView] = useState<'editor' | 'storyboards' | 'assets' | 'instructions'>('editor')
+
+  const [mounted, setMounted] = useState(false)
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Cloud Search State
   const [searchQuery, setSearchQuery] = useState('')
@@ -134,12 +145,12 @@ function Text2ReelContent() {
       const data = await res.json()
       if (res.ok) {
         setSavedProjectId(data.project.id)
-        alert(`✅ Project saved to SQLite! (ID: ${data.project.id.slice(0, 8)}…)`)
+        toast.success(`Project saved to SQLite! (ID: ${data.project.id.slice(0, 8)}…)`)
       } else {
-        alert('Failed to save: ' + (data.error ?? 'Unknown error'))
+        toast.error('Failed to save: ' + (data.error ?? 'Unknown error'))
       }
     } catch {
-      alert('Could not connect to the save API.')
+      toast.error('Could not connect to the save API.')
     } finally {
       setIsSaving(false)
     }
@@ -166,9 +177,12 @@ function Text2ReelContent() {
     onError: (error) => {
       console.error('Generation Error:', error)
       setIsLoading(false)
-      alert('Failed to generate scenes. Please try again.')
+      toast.error('Failed to generate scenes. Please try again.')
     }
   })
+
+  // Prevent hydration errors by not rendering until client runs inside useText2ReelStore
+  if (!mounted) return null
 
   if (!showWorkspace) {
     return <LandingPage onGetStarted={() => setShowWorkspace(true)} />
@@ -181,6 +195,16 @@ function Text2ReelContent() {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="flex h-dvh w-full bg-background-dark text-[#FFD9CC] font-sans selection:bg-primary/30 relative overflow-hidden"
     >
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#16213e',
+            color: '#FFD9CC',
+            border: '1px solid rgba(247,154,122,0.2)',
+          }
+        }}
+      />
       <div className="absolute inset-0 bg-linear-to-t from-background-dark via-transparent to-transparent opacity-40 z-0 pointer-events-none" />
 
       {/* Side Navigation */}
@@ -207,7 +231,7 @@ function Text2ReelContent() {
             className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'editor' ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(247,154,122,0.1)]' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'
               }`}
           >
-            <Dashboard fontSize="small" />
+            <LayoutDashboard size={20} />
             <span className="text-sm font-medium hidden lg:block">Editor</span>
           </div >
           <div
@@ -215,7 +239,7 @@ function Text2ReelContent() {
             className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'storyboards' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'
               }`}
           >
-            <AutoStories fontSize="small" />
+            <BookOpen size={20} />
             <span className="text-sm font-medium hidden lg:block">Storyboards</span>
           </div>
           <div
@@ -223,21 +247,22 @@ function Text2ReelContent() {
             className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'assets' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'
               }`}
           >
-            <FolderOpen fontSize="small" />
+            <FolderOpen size={20} />
             <span className="text-sm font-medium hidden lg:block">Assets</span>
+          </div>
+          <div
+            onClick={() => setActiveView('projects')}
+            className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'projects' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'
+              }`}
+          >
+            <Archive size={20} />
+            <span className="text-sm font-medium hidden lg:block">Projects</span>
           </div>
 
           <div className="pt-6 mt-6 border-t border-primary/5">
             <p className="px-3 text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 hidden lg:block">Workspace</p>
-            <div
-              onClick={() => setActiveView('instructions')}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'instructions' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'}`}
-            >
-              <Help fontSize="small" />
-              <span className="text-sm font-medium hidden lg:block">Instructions</span>
-            </div>
-            <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:bg-primary/5 transition-colors cursor-pointer">
-              <Settings fontSize="small" />
+            <div onClick={() => setActiveView('settings')} className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'settings' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'}`}>
+              <Settings size={20} />
               <span className="text-sm font-medium hidden lg:block">Settings</span>
             </div>
           </div>
@@ -245,24 +270,17 @@ function Text2ReelContent() {
 
         <div className="p-4 border-t border-primary/10">
           <div
-            className="flex items-center gap-3 p-2 rounded-xl bg-surface-dark border border-primary/5 cursor-pointer hover:border-primary/20 transition-all"
+            className="flex items-center gap-3 p-2 rounded-xl bg-surface-dark border border-primary/5 cursor-pointer hover:border-primary/20 hover:bg-primary/5 transition-all group"
             onClick={() => setShowWorkspace(false)}
             title="Back to Landing Page"
           >
-            <div className="size-8 rounded-full bg-primary/20 overflow-hidden border border-primary/10 flex items-center justify-center">
-              <Image
-                src="/logo.png"
-                alt="Avatar"
-                width={24}
-                height={24}
-                className="w-full h-full object-contain p-0.5"
-              />
+            <div className="size-8 rounded-full bg-primary/10 overflow-hidden border border-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-background-dark transition-colors">
+              <LogOut size={16} />
             </div>
             <div className="hidden lg:block flex-1 min-w-0">
-              <p className="text-xs font-bold truncate">Shakiran</p>
-              <p className="text-[10px] text-slate-500">UI Gardener</p>
+              <p className="text-xs font-bold truncate">Back Home</p>
+              <p className="text-[10px] text-slate-500">Exit Workspace</p>
             </div>
-            <UnfoldMore fontSize="small" className="text-slate-500 hidden lg:block" />
           </div>
         </div>
       </aside>
@@ -282,7 +300,7 @@ function Text2ReelContent() {
                 disabled={scenes.length === 0 || isSaving}
                 className="bg-primary hover:bg-[#FFD9CC] text-background-dark font-display font-black px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
               >
-                <IosShare fontSize="small" />
+                <Share size={16} />
                 {isSaving ? 'Saving…' : savedProjectId ? 'Update Save' : 'Save Video'}
               </button>
             </div>
@@ -290,7 +308,7 @@ function Text2ReelContent() {
             {/* Section 1: The Vision */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <AutoAwesome className="text-primary" />
+                <Sparkles className="text-primary" />
                 <h3 className="font-display font-semibold text-lg uppercase tracking-wide">The Vision</h3>
               </div>
               <div className="relative glass-panel rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/40 transition-all shadow-inner">
@@ -302,7 +320,7 @@ function Text2ReelContent() {
             <div className="space-y-4 pb-12 overflow-hidden flex flex-col flex-1 min-h-[400px]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ViewQuilt className="text-primary" />
+                  <LayoutGrid className="text-primary" />
                   <h3 className="font-display font-semibold text-lg uppercase tracking-wide">The Blueprint</h3>
                 </div>
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">
@@ -320,7 +338,7 @@ function Text2ReelContent() {
             {/* Header */}
             <div className="flex items-center gap-3 border-b border-primary/10 px-6 py-4 shrink-0">
               <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                <AutoStories className="text-primary" fontSize="small" />
+                <BookOpen className="text-primary" fontSize="small" />
               </div>
               <div>
                 <h2 className="font-display text-xl font-bold text-[#FFD9CC] uppercase tracking-widest">Video Editor</h2>
@@ -337,7 +355,7 @@ function Text2ReelContent() {
             <div className="flex justify-between items-start border-b border-primary/10 pb-6">
               <div className="flex items-center gap-3">
                 <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
-                  <FolderOpen className="text-primary" />
+                  <FolderOpen size={24} className="text-primary" />
                 </div>
                 <div>
                   <h2 className="font-display text-2xl font-bold text-[#FFD9CC] uppercase tracking-widest">Project Assets</h2>
@@ -355,7 +373,7 @@ function Text2ReelContent() {
                 onClick={() => fileInputRef.current?.click()}
                 className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-black px-4 py-2 rounded-xl text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all"
               >
-                <CloudUpload fontSize="small" />
+                <Upload fontSize="small" />
                 Upload Media
               </button>
             </div>
@@ -365,7 +383,7 @@ function Text2ReelContent() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-display font-semibold text-sm uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <Audiotrack fontSize="small" className="text-primary/60" /> Audio Library
+                    <Music fontSize="small" className="text-primary/60" /> Audio Library
                   </h3>
                   {/* Cloud Search Bar */}
                   <form onSubmit={handleCloudSearch} className="flex items-center gap-2">
@@ -396,7 +414,7 @@ function Text2ReelContent() {
                         className={`glass-panel p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all border ${activeAudioTrack === trackName ? 'border-primary shadow-[0_0_10px_rgba(247,154,122,0.2)]' : 'border-primary/10 hover:border-primary/30'}`}
                       >
                         <div className={`size-8 rounded-full flex items-center justify-center ${activeAudioTrack === trackName ? 'bg-primary text-background-dark' : 'bg-primary/20 text-primary'}`}>
-                          {activeAudioTrack === trackName ? <Pause fontSize="small" /> : <PlayArrow fontSize="small" />}
+                          {activeAudioTrack === trackName ? <Pause size={14} /> : <Play size={14} />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-bold truncate text-[#FFD9CC]">{trackName}</p>
@@ -416,7 +434,7 @@ function Text2ReelContent() {
               {/* Imagery Section */}
               <div className="space-y-4">
                 <h3 className="font-display font-semibold text-sm uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                  <FolderOpen fontSize="small" className="text-primary/60" /> Visual Assets
+                  <FolderOpen size={16} className="text-primary/60" /> Visual Assets
                 </h3>
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
                   {/* Cloud Images */}
@@ -441,7 +459,7 @@ function Text2ReelContent() {
                       {asset.type === 'image' ? (
                         <Image src={asset.url} alt={asset.name} fill className="object-cover transition-transform group-hover:scale-110" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-surface-dark"><PlayArrow className="text-primary opacity-50" /></div>
+                        <div className="w-full h-full flex items-center justify-center bg-surface-dark"><Play size={24} className="text-primary opacity-50" /></div>
                       )}
                       <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-background-dark/90 to-transparent p-2 pt-6">
                         <p className="text-[8px] text-primary font-bold truncate">{asset.name}</p>
@@ -469,7 +487,7 @@ function Text2ReelContent() {
             <div className="flex justify-between items-start border-b border-primary/10 pb-6">
               <div className="flex items-center gap-3">
                 <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
-                  <Help className="text-primary" />
+                  <HelpCircle className="text-primary" />
                 </div>
                 <div>
                   <h2 className="font-display text-2xl font-bold text-[#FFD9CC] uppercase tracking-widest">Guide</h2>
@@ -519,6 +537,13 @@ function Text2ReelContent() {
               </div>
             </div>
           </section>
+        ) : activeView === 'projects' ? (
+          <ProjectsList onProjectLoaded={(id: string) => {
+            setSavedProjectId(id)
+            setActiveView('editor')
+          }} />
+        ) : activeView === 'settings' ? (
+          <SettingsPage />
         ) : null}
 
         {/* Right Panel: Preview Player */}

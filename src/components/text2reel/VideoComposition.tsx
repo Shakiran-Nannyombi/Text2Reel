@@ -14,6 +14,8 @@ const FILTER_CSS: Record<string, string> = {
     warm: 'sepia(0.4) saturate(1.2)',
     cool: 'hue-rotate(180deg) saturate(0.9)',
     neon: 'hue-rotate(90deg) saturate(2) contrast(1.3)',
+    vintage: 'sepia(0.8) contrast(1.2) brightness(0.9)',
+    dream: 'contrast(0.9) brightness(1.2) saturate(1.5)',
 }
 
 const BackgroundAnimation = ({ style, color, frame }: { style: string, color: string, frame: number }) => {
@@ -83,6 +85,51 @@ const BackgroundAnimation = ({ style, color, frame }: { style: string, color: st
                     transform: `scale(${scale})`
                 }}
             />
+        )
+    }
+
+    // 4. VHS Scanlines
+    if (style === 'scanlines') {
+        return (
+            <AbsoluteFill style={{ backgroundColor: color, overflow: 'hidden' }}>
+                <AbsoluteFill
+                    style={{
+                        background: 'linear-gradient(transparent 50%, rgba(0,0,0,0.2) 50%)',
+                        backgroundSize: '100% 4px',
+                        transform: `translateY(${frame % 4}px)`
+                    }}
+                />
+            </AbsoluteFill>
+        )
+    }
+
+    // 5. Starfield
+    if (style === 'stars') {
+        const starCount = 50
+        return (
+            <AbsoluteFill style={{ backgroundColor: color, overflow: 'hidden' }}>
+                {Array.from({ length: starCount }).map((_, i) => {
+                    const x = ((i * 12345) % width)
+                    const speed = 1 + (i % 3)
+                    const y = (height - ((i * 54321 + frame * speed) % height))
+                    const size = 2 + (i % 3)
+                    return (
+                        <div
+                            key={i}
+                            style={{
+                                position: 'absolute',
+                                left: x,
+                                top: y,
+                                width: size,
+                                height: size,
+                                backgroundColor: 'white',
+                                borderRadius: '50%',
+                                opacity: Math.sin(frame * 0.1 + i) * 0.5 + 0.5,
+                            }}
+                        />
+                    )
+                })}
+            </AbsoluteFill>
         )
     }
 
