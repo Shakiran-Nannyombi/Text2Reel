@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: "Text2Reel | Cinematic AI Video Generator",
   description: "Transform your vision into rhythmic reels with neural AI.",
   icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

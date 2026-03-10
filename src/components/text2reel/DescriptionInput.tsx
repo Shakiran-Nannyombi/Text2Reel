@@ -30,6 +30,12 @@ export default function DescriptionInput({ onSubmit }: DescriptionInputProps) {
         },
     })
 
+    const samplePrompts = [
+        "A cyberpunk neon-lit street in Tokyo, raining, slow zoom in, Synthwave mood.",
+        "A cozy cabin in the snowy mountains, evening glow from the window.",
+        "Abstract fluid art, bold colors swirling, dynamic motion, fast pace."
+    ]
+
     return (
         <div className="w-full">
             <form
@@ -59,6 +65,21 @@ export default function DescriptionInput({ onSubmit }: DescriptionInputProps) {
                                 disabled={isLoading}
                             />
                             <FieldInfo error={field.state.meta.errors?.[0] ? String(field.state.meta.errors[0]) : null} />
+
+                            {/* Sample Prompts */}
+                            <div className="flex flex-wrap items-center gap-2 p-4 px-6 pt-0">
+                                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mr-2">Samples:</span>
+                                {samplePrompts.map((prompt, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => field.handleChange(prompt)}
+                                        className="text-[10px] bg-primary/10 hover:bg-primary/20 text-[#FFD9CC] border border-primary/20 rounded-full px-3 py-1 transition-colors whitespace-nowrap"
+                                    >
+                                        &quot;{prompt.substring(0, 20)}...&quot;
+                                    </button>
+                                ))}
+                            </div>
 
                             <div className="flex items-center justify-between p-4 bg-primary/5 border-t border-primary/10">
                                 <div className="flex items-center gap-4">
