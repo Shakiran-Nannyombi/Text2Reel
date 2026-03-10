@@ -72,6 +72,7 @@ function Text2ReelContent() {
   const previewOverlayRef = useRef<HTMLDivElement>(null)
 
   useGSAP(() => {
+    if (!mobileMenuRef.current) return
     if (isMenuOpen) {
       gsap.to(mobileMenuRef.current, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out', display: 'flex' })
     } else {
@@ -84,6 +85,7 @@ function Text2ReelContent() {
   }, [isMenuOpen])
 
   useGSAP(() => {
+    if (!previewOverlayRef.current) return
     if (isPreviewOpen) {
       gsap.to(previewOverlayRef.current, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out', display: 'flex' })
     } else {

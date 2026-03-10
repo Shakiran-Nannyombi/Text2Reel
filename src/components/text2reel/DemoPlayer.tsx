@@ -19,6 +19,7 @@ export default function DemoPlayer() {
             autoPlay
             loop
             controls
+            acknowledgeRemotionLicense
         />
     )
 }
