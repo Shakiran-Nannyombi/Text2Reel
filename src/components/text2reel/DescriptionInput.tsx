@@ -81,17 +81,17 @@ export default function DescriptionInput({ onSubmit }: DescriptionInputProps) {
                                 ))}
                             </div>
 
-                            <div className="flex items-center justify-between p-4 bg-primary/5 border-t border-primary/10">
-                                <div className="flex items-center gap-4">
-                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group">
+                            <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-primary/5 border-t border-primary/10">
+                                <div className="flex items-center gap-4 shrink-0">
+                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group" title="Beat Sync (coming soon)">
                                         <MusicNote fontSize="small" className="group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Beat Sync</span>
                                     </button>
-                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group">
+                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group" title="Mood (coming soon)">
                                         <Palette fontSize="small" className="group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Mood</span>
                                     </button>
-                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group">
+                                    <button type="button" className="text-slate-400 hover:text-primary transition-colors flex items-center gap-1.5 group" title="Duration (coming soon)">
                                         <Schedule fontSize="small" className="group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Duration</span>
                                     </button>
@@ -99,7 +99,7 @@ export default function DescriptionInput({ onSubmit }: DescriptionInputProps) {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="bg-primary/20 text-primary border border-primary/30 font-black px-5 py-2 rounded-xl text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-primary/30 transition-all active:scale-95 disabled:opacity-50"
+                                    className="bg-primary/20 text-primary border border-primary/30 font-black px-5 py-2 rounded-xl text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-primary/30 transition-all active:scale-95 disabled:opacity-50 shrink-0 ml-auto"
                                 >
                                     {isLoading ? (
                                         <div className="flex items-center gap-2">

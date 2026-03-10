@@ -7,6 +7,7 @@ export type Scene = {
     icon: string
     animationStyle: string
     imageUrl: string
+    videoUrl?: string
 }
 
 export type UserAsset = {

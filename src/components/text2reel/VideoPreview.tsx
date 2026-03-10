@@ -9,38 +9,52 @@ import {
     SkipPrevious,
     PlayArrow,
     Pause,
-    SkipNext
+    SkipNext,
+    Replay
 } from '@mui/icons-material'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'contain' | 'cover' }) {
     const { scenes } = useText2ReelStore()
     const playerRef = useRef<PlayerRef>(null)
     const [isPlaying, setIsPlaying] = useState(false)
+    const [currentFrame, setCurrentFrame] = useState(0)
 
-    // Calculate total duration
     const totalDurationInSeconds = scenes.reduce((acc: number, scene: Scene) => acc + scene.duration, 0)
-    // Default to 1 second minimum to avoid division by zero or errors if empty
     const durationInFrames = Math.max(1, Math.ceil(totalDurationInSeconds * 30))
 
-    useEffect(() => {
-        const { current } = playerRef
-        if (!current) return
-
+    // Attach play/pause listeners when player mounts (via callback ref pattern)
+    const attachListeners = useCallback((player: PlayerRef | null) => {
+        if (!player) return
         const onPlay = () => setIsPlaying(true)
         const onPause = () => setIsPlaying(false)
-
-        current.addEventListener('play', onPlay)
-        current.addEventListener('pause', onPause)
-
-        return () => {
-            current.removeEventListener('play', onPlay)
-            current.removeEventListener('pause', onPause)
-        }
+        const onFrameUpdate = ({ detail }: { detail: { frame: number } }) => setCurrentFrame(detail.frame)
+        player.addEventListener('play', onPlay)
+        player.addEventListener('pause', onPause)
+        // @ts-expect-error - Remotion player frameupdate event
+        player.addEventListener('frameupdate', onFrameUpdate)
     }, [])
 
-    const handleDownload = () => {
-        alert('Rendering and Downloading... (Triggering Remotion Lambda/Server)')
+    // Re-attach when scenes change (player remounts)
+    useEffect(() => {
+        const timer = setTimeout(() => attachListeners(playerRef.current), 200)
+        return () => clearTimeout(timer)
+    }, [scenes, attachListeners])
+
+    const handleDownload = async () => {
+        // Export scenes as a JSON "project file" the user can re-import
+        const projectData = {
+            exportedAt: new Date().toISOString(),
+            totalDuration: totalDurationInSeconds,
+            scenes,
+        }
+        const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `text2reel-project-${Date.now()}.json`
+        a.click()
+        URL.revokeObjectURL(url)
     }
 
     const togglePlay = () => {
@@ -52,9 +66,23 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
         }
     }
 
+    const progressPercent = durationInFrames > 0 ? (currentFrame / (durationInFrames - 1)) * 100 : 0
+    const currentTimeSeconds = currentFrame / 30
+
+    // Which scene are we on?
+    let accumulated = 0
+    let currentSceneIndex = 0
+    for (let i = 0; i < scenes.length; i++) {
+        accumulated += scenes[i].duration
+        if (currentTimeSeconds < accumulated) {
+            currentSceneIndex = i
+            break
+        }
+    }
+
     return (
         <div className="w-full h-full bg-background-dark flex flex-col relative group overflow-hidden">
-            {/* Overlay Header Controls (Internal to Phone Frame) */}
+            {/* Overlay Header Controls */}
             <div className="absolute top-0 inset-x-0 z-30 p-6 flex justify-end pointer-events-none">
                 <button className="size-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/10 pointer-events-auto hover:bg-primary/20 hover:text-primary transition-all active:scale-95">
                     <VideoSettings sx={{ fontSize: 16 }} />
@@ -71,11 +99,7 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
                         fps={30}
                         compositionWidth={1080}
                         compositionHeight={1920}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit,
-                        }}
+                        style={{ width: '100%', height: '100%', objectFit }}
                         autoPlay={false}
                         loop
                     />
@@ -91,36 +115,57 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
 
             {/* Bottom Controls Overlay */}
             {scenes.length > 0 && (
-                <div className="absolute bottom-0 inset-x-0 z-30 p-8 pt-20 bg-linear-to-t from-background-dark via-background-dark/80 to-transparent">
+                <div className="absolute bottom-0 inset-x-0 z-30 p-4 pt-20 bg-linear-to-t from-background-dark via-background-dark/80 to-transparent">
                     <div className="glass-panel border-white/10 p-4 rounded-3xl atmospheric-glow">
-                        <div className="flex items-center justify-between mb-3">
+                        {/* Scene info */}
+                        <div className="flex items-center justify-between mb-2">
                             <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">
-                                SCENE 0{Math.min(scenes.length, 1)}
+                                SCENE {String(currentSceneIndex + 1).padStart(2, '0')}
                             </span>
                             <span className="text-[10px] font-black text-primary tracking-widest leading-none">
-                                {totalDurationInSeconds.toFixed(1)}s TOTAL
+                                {currentTimeSeconds.toFixed(1)}s / {totalDurationInSeconds.toFixed(1)}s
                             </span>
                         </div>
 
-                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-5 border border-white/5">
+                        {/* Seekable progress bar */}
+                        <div
+                            className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-4 border border-white/5 cursor-pointer"
+                            onClick={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                const ratio = (e.clientX - rect.left) / rect.width
+                                playerRef.current?.seekTo(Math.floor(ratio * (durationInFrames - 1)))
+                            }}
+                        >
                             <div
-                                className="h-full bg-primary shadow-[0_0_12px_#f79878] transition-all duration-300"
-                                style={{ width: isPlaying ? '100%' : '33%' }}
-                            ></div>
+                                className="h-full bg-primary shadow-[0_0_12px_#f79878] transition-none"
+                                style={{ width: `${progressPercent}%` }}
+                            />
                         </div>
 
+                        {/* Controls */}
                         <div className="flex items-center justify-center gap-8">
-                            <button onClick={() => {
-                                if (playerRef.current) {
-                                    const currentFrame = playerRef.current.getCurrentFrame();
-                                    playerRef.current.seekTo(Math.max(0, currentFrame - 30));
-                                }
-                            }} className="text-slate-400 hover:text-primary transition-all active:scale-90">
+                            <button
+                                onClick={() => {
+                                    playerRef.current?.seekTo(0)
+                                    setIsPlaying(false)
+                                }}
+                                className="text-slate-400 hover:text-primary transition-all active:scale-90"
+                                title="Restart"
+                            >
+                                <Replay />
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const f = playerRef.current?.getCurrentFrame() ?? 0
+                                    playerRef.current?.seekTo(Math.max(0, f - 30))
+                                }}
+                                className="text-slate-400 hover:text-primary transition-all active:scale-90"
+                            >
                                 <SkipPrevious />
                             </button>
                             <button
                                 onClick={togglePlay}
-                                className="size-14 rounded-full bg-primary text-background-dark flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/30 group/play"
+                                className="size-14 rounded-full bg-primary text-background-dark flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/30"
                             >
                                 {isPlaying ? (
                                     <Pause sx={{ fontSize: 32 }} />
@@ -128,28 +173,25 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
                                     <PlayArrow sx={{ fontSize: 32 }} className="translate-x-0.5" />
                                 )}
                             </button>
-                            <button onClick={() => {
-                                if (playerRef.current) {
-                                    const currentFrame = playerRef.current.getCurrentFrame();
-                                    playerRef.current.seekTo(Math.min(durationInFrames - 1, currentFrame + 30));
-                                }
-                            }} className="text-slate-400 hover:text-primary transition-all active:scale-90">
+                            <button
+                                onClick={() => {
+                                    const f = playerRef.current?.getCurrentFrame() ?? 0
+                                    playerRef.current?.seekTo(Math.min(durationInFrames - 1, f + 30))
+                                }}
+                                className="text-slate-400 hover:text-primary transition-all active:scale-90"
+                            >
                                 <SkipNext />
+                            </button>
+                            <button
+                                onClick={handleDownload}
+                                className="text-slate-400 hover:text-primary transition-all active:scale-90"
+                                title="Download Project File"
+                            >
+                                <Download />
                             </button>
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Float Download Button */}
-            {scenes.length > 0 && (
-                <button
-                    onClick={handleDownload}
-                    className="absolute bottom-32 right-6 z-40 bg-[#F79A7A] hover:bg-white text-black font-black p-3.5 rounded-full flex items-center justify-center transition-all shadow-2xl opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 active:scale-95"
-                    title="Render and Download"
-                >
-                    <Download />
-                </button>
             )}
         </div>
     )

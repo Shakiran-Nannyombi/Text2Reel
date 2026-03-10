@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider, useMutation } from '@tanstack/react-q
 import DescriptionInput from '@/components/text2reel/DescriptionInput'
 import SceneGrid from '@/components/text2reel/SceneGrid'
 import VideoPreview from '@/components/text2reel/VideoPreview'
+import VideoEditor from '@/components/text2reel/VideoEditor'
 import LandingPage from '@/components/text2reel/LandingPage'
 import { useText2ReelStore, type Scene, type UserAsset } from '@/store/useText2ReelStore'
 
@@ -48,7 +49,7 @@ function Text2ReelContent() {
     activeAudioTrack, setActiveAudioTrack,
     userAssets, addUserAsset,
     selectedAssetUrl, setSelectedAssetUrl,
-    updateScene, setIsLoading
+    setIsLoading
   } = useText2ReelStore()
   const [showWorkspace, setShowWorkspace] = useState(false)
   const [activeView, setActiveView] = useState<'editor' | 'storyboards' | 'assets' | 'instructions'>('editor')
@@ -315,79 +316,21 @@ function Text2ReelContent() {
             </div>
           </section>
         ) : activeView === 'storyboards' ? (
-          <section className="flex-1 flex flex-col overflow-y-auto border-r border-primary/10 p-6 lg:p-8 space-y-8 atmospheric-glow relative z-10 custom-scrollbar shadow-inner">
-            <div className="flex items-center gap-3 border-b border-primary/10 pb-6">
-              <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
-                <AutoStories className="text-primary" />
+          <section className="flex-1 flex flex-col border-r border-primary/10 overflow-hidden atmospheric-glow relative z-10 shadow-inner">
+            {/* Header */}
+            <div className="flex items-center gap-3 border-b border-primary/10 px-6 py-4 shrink-0">
+              <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
+                <AutoStories className="text-primary" fontSize="small" />
               </div>
               <div>
-                <h2 className="font-display text-2xl font-bold text-[#FFD9CC] uppercase tracking-widest">Storyboards</h2>
-                <p className="text-slate-400 text-xs italic">Chronological breakdown of the cinematic sequence</p>
+                <h2 className="font-display text-xl font-bold text-[#FFD9CC] uppercase tracking-widest">Video Editor</h2>
+                <p className="text-slate-400 text-[10px] italic">Timeline · Transitions · Filters · Effects</p>
               </div>
             </div>
-
-            {scenes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center flex-1 text-slate-500 italic opacity-50">
-                <AutoStories sx={{ fontSize: 64 }} className="mb-4 opacity-20" />
-                <p>No vision generated yet. Proceed to Editor.</p>
-              </div>
-            ) : (
-              <div className="space-y-6 pb-20">
-                {scenes.map((scene, i) => (
-                  <div key={i} className="flex flex-col md:flex-row gap-6 glass-panel p-4 rounded-3xl border border-primary/10 hover:border-primary/30 transition-all group">
-                    <div className="relative w-full md:w-48 aspect-video bg-surface-dark rounded-2xl overflow-hidden shrink-0">
-                      {scene.imageUrl ? (
-                        <Image src={scene.imageUrl} alt={`Scene ${i + 1}`} fill className="object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center relative group/color transition-colors" style={{ backgroundColor: scene.color }}>
-                          <span className="text-white/30 font-black text-2xl z-10 pointer-events-none">S{i + 1}</span>
-                          <input
-                            type="color"
-                            title="Edit Background Color"
-                            value={scene.color}
-                            onChange={(e) => updateScene(i, { ...scene, color: e.target.value })}
-                            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-0"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col justify-center space-y-2 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black tracking-[0.2em] text-primary uppercase border border-primary/20 px-2 py-1 rounded bg-primary/5">Scene 0{i + 1}</span>
-                        <div className="flex items-center gap-2">
-                          {selectedAssetUrl && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateScene(i, { ...scene, imageUrl: selectedAssetUrl });
-                                setSelectedAssetUrl(null);
-                              }}
-                              className="text-[9px] font-black tracking-widest uppercase bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/30 hover:bg-primary hover:text-background-dark hover:shadow-[0_0_10px_#f79a7a] transition-all cursor-pointer mr-2"
-                            >
-                              Paste Image
-                            </button>
-                          )}
-                          <input
-                            type="number"
-                            value={scene.duration}
-                            onChange={(e) => updateScene(i, { ...scene, duration: Number(e.target.value) })}
-                            className="w-16 bg-transparent border-b border-primary/30 text-right focus:outline-none focus:border-primary text-xs font-bold text-slate-400"
-                            min="0.5" step="0.5"
-                          />
-                          <span className="text-xs font-bold text-slate-400">s • {scene.animationStyle}</span>
-                        </div>
-                      </div>
-                      <textarea
-                        value={scene.text}
-                        onChange={(e) => updateScene(i, { ...scene, text: e.target.value })}
-                        className="w-full text-sm text-slate-300 italic leading-relaxed border-l-2 border-primary/20 pl-4 py-1 bg-transparent resize-none focus:outline-none focus:border-primary/50"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* CapCut-style editor fills the rest */}
+            <div className="flex-1 overflow-hidden">
+              <VideoEditor />
+            </div>
           </section>
         ) : activeView === 'assets' ? (
           <section className="flex-1 flex flex-col overflow-y-auto border-r border-primary/10 p-6 lg:p-8 space-y-8 atmospheric-glow relative z-10 custom-scrollbar shadow-inner">
