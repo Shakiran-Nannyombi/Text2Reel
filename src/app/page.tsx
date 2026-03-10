@@ -67,9 +67,11 @@ function Text2ReelContent() {
   const [isSaving, setIsSaving] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isSavedModalOpen, setIsSavedModalOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const previewOverlayRef = useRef<HTMLDivElement>(null)
+  const savedModalRef = useRef<HTMLDivElement>(null)
 
   useGSAP(() => {
     if (!mobileMenuRef.current) return
@@ -83,6 +85,19 @@ function Text2ReelContent() {
       })
     }
   }, [isMenuOpen])
+
+  useGSAP(() => {
+    if (!savedModalRef.current) return
+    if (isSavedModalOpen) {
+      gsap.to(savedModalRef.current, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out', display: 'flex' })
+    } else {
+      gsap.to(savedModalRef.current, {
+        y: '20px', opacity: 0, duration: 0.4, ease: 'power3.in', onComplete: () => {
+          if (savedModalRef.current) savedModalRef.current.style.display = 'none'
+        }
+      })
+    }
+  }, [isSavedModalOpen])
 
   useGSAP(() => {
     if (!previewOverlayRef.current) return
@@ -99,6 +114,25 @@ function Text2ReelContent() {
 
   useEffect(() => {
     setMounted(true)
+
+    // Global Unmuter for automatic audio on first interaction
+    const handleFirstInteraction = () => {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(v => {
+        v.muted = false;
+        v.play().catch(() => { });
+      });
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
   }, [])
 
   // Cloud Search State
@@ -178,7 +212,9 @@ function Text2ReelContent() {
       const data = await res.json()
       if (res.ok) {
         setSavedProjectId(data.project.id)
-        toast.success(`Project saved to SQLite! (ID: ${data.project.id.slice(0, 8)}…)`)
+        setIsSavedModalOpen(true)
+        // Auto-close after 3s
+        setTimeout(() => setIsSavedModalOpen(false), 3000)
       } else {
         toast.error('Failed to save: ' + (data.error ?? 'Unknown error'))
       }
@@ -720,6 +756,41 @@ function Text2ReelContent() {
           </div>
         </section>
       </main>
+
+      {/* Project Saved Modal Overlay (GSAP Animated) */}
+      <div
+        ref={savedModalRef}
+        className="fixed inset-0 z-110 items-center justify-center p-6 bg-background-dark/80 backdrop-blur-md hidden"
+        style={{ transform: 'translateY(20px)', opacity: 0 }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setIsSavedModalOpen(false)
+        }}
+      >
+        <div className="glass-panel max-w-sm w-full p-8 rounded-[2.5rem] border border-primary/30 shadow-3xl flex flex-col items-center text-center space-y-6 atmospheric-glow relative overflow-hidden">
+          <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+
+          <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-glow mb-2">
+            <Archive className="text-primary" size={32} />
+          </div>
+
+          <div>
+            <h3 className="font-display font-black text-2xl text-[#FFD9CC] uppercase tracking-widest leading-none mb-2">Project Saved</h3>
+            <p className="text-slate-400 text-xs italic tracking-wider">Your cinematic vision is now persistent in the neural archive.</p>
+          </div>
+
+          <div className="w-full bg-primary/10 rounded-xl p-3 border border-primary/10">
+            <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-1">Project ID</p>
+            <p className="text-xs font-mono text-slate-300 truncate">{savedProjectId}</p>
+          </div>
+
+          <button
+            onClick={() => setIsSavedModalOpen(false)}
+            className="w-full py-4 rounded-xl bg-primary text-background-dark font-display font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20"
+          >
+            Acknowledge
+          </button>
+        </div>
+      </div>
     </motion.div>
   )
 }

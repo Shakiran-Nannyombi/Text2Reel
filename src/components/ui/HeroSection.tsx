@@ -236,9 +236,12 @@ const HeroSection = ({
             };
 
             if (showVideo) {
+                // Remove muted and try to play unmuted
+                videoElement.muted = false;
                 videoElement.play().catch(error => {
-                    console.error("HeroSection: Error playing video:", error);
-                    setShowVideo(false);
+                    console.log("HeroSection: Unmuted playback blocked, playing muted as fallback:", error);
+                    videoElement.muted = true;
+                    videoElement.play();
                 });
                 videoElement.addEventListener('ended', handleVideoEnd);
             } else {
@@ -382,7 +385,6 @@ const HeroSection = ({
                                 <video
                                     ref={videoRef}
                                     src={videoUrl}
-                                    muted
                                     autoPlay
                                     loop
                                     playsInline

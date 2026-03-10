@@ -1,41 +1,52 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { HeroSection } from '@/components/ui/HeroSection';
-import { Sparkles, BookOpen, Crown, Zap, Shield, Database, Layout, PenTool, Tv } from 'lucide-react';
-
-const DEMO_VIDEOS = ['/demo1.mp4', '/demo2.webm', '/demo3.mp4'];
+import { Sparkles, BookOpen, Crown, Zap, Shield, Database, Layout, PenTool, Tv, Play, Pause } from 'lucide-react';
 
 function DemoVideoPlayer() {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(true);
 
-    const handleVideoEnd = () => {
-        setCurrentIndex(prev => (prev + 1) % DEMO_VIDEOS.length);
+    const togglePlay = () => {
+        if (videoRef.current) {
+            if (isPlaying) {
+                videoRef.current.pause();
+            } else {
+                videoRef.current.play().catch(() => { });
+            }
+            setIsPlaying(!isPlaying);
+        }
     };
 
-    useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.load();
-            videoRef.current.play().catch(() => { });
-        }
-    }, [currentIndex]);
-
     return (
-        <video
-            ref={videoRef}
-            key={currentIndex}
-            src={DEMO_VIDEOS[currentIndex]}
-            onEnded={handleVideoEnd}
-            autoPlay
-            muted
-            playsInline
-            style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-            }}
-        />
+        <div
+            className="absolute inset-0 cursor-pointer group"
+            onClick={togglePlay}
+        >
+            <video
+                ref={videoRef}
+                src="/demoTutorial.mp4"
+                autoPlay
+                loop
+                playsInline
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                }}
+            />
+            {/* Visual Indicator for Pause/Play */}
+            <div className={`absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity duration-300 ${isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                <div className="size-20 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                    {isPlaying ? (
+                        <Pause className="text-white fill-current" size={32} />
+                    ) : (
+                        <Play className="text-white fill-current ml-1" size={32} />
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -69,7 +80,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 tagline="The most efficient bridge between human imagination and rhythmic cinematic reality ever built. Turn any story into a high-octane 9:16 reel instantly."
                 buttonText="Ignite Vision"
                 imageUrl="/text2reel.png"
-                videoUrl="/demo1.mp4"
+                videoUrl="/demoTutorial.mp4"
                 logoUrl="/logo.png"
                 navItems={navItems}
                 renderPreview={() => <DemoVideoPlayer />}
