@@ -24,6 +24,7 @@ html {
   --ring: #f79878;
 }
 
+/* Tailwind 4 CSS Theme variables */
 @theme {
   --font-sans: var(--font-inter);
   --font-display: var(--font-outfit);
@@ -61,7 +62,7 @@ body {
   background: #f79878;
 }
 
-/* Scrollbar Hiding Utilities */
+/* Tailwind 4 Utility Definitions */
 @utility no-scrollbar {
   scrollbar-width: none;
 
@@ -78,7 +79,6 @@ body {
   }
 }
 
-/* Custom UI Utilities */
 @utility glass-panel {
   background: rgba(15, 5, 24, 0.7);
   backdrop-filter: blur(12px);

@@ -23,6 +23,7 @@ interface HeroSectionProps {
     videoUrl?: string;
     logoUrl?: string;
     navItems?: NavItem[];
+    renderPreview?: () => React.ReactNode;
 }
 
 // Helper to parse 'rgb(r, g, b)' or 'rgba(r, g, b, a)' string to {r, g, b}
@@ -47,6 +48,7 @@ const HeroSection = ({
     videoUrl,
     logoUrl,
     navItems = [],
+    renderPreview,
 }: HeroSectionProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const targetRef = useRef<HTMLButtonElement>(null);
@@ -360,7 +362,7 @@ const HeroSection = ({
 
                 <div className="mt-20 lg:mt-32 w-full max-w-6xl mx-auto overflow-hidden px-4">
                     <div className="bg-primary/5 rounded-[3rem] p-3 border border-primary/10 shadow-3xl atmospheric-glow">
-                        <div className="relative h-72 sm:h-96 md:h-[500px] lg:h-[650px] rounded-[2.5rem] bg-card flex items-center justify-center overflow-hidden border border-white/5 shadow-2xl">
+                        <div className="relative h-72 sm:h-96 md:h-[500px] lg:h-[650px] rounded-[2.5rem] bg-card overflow-hidden border border-white/5 shadow-2xl">
                             {imageUrl && (
                                 <Image
                                     src={imageUrl}
@@ -370,7 +372,12 @@ const HeroSection = ({
                                         }`}
                                 />
                             )}
-                            {videoUrl && (
+                            {renderPreview ? (
+                                <div className={`w-full h-full object-cover transition-opacity duration-700 ${showVideo ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                                    }`}>
+                                    {renderPreview()}
+                                </div>
+                            ) : videoUrl && (
                                 <video
                                     ref={videoRef}
                                     src={videoUrl}

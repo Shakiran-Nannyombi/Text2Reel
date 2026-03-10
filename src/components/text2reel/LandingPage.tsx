@@ -1,5 +1,6 @@
 import React from 'react';
 import { HeroSection } from '@/components/ui/HeroSection';
+import DemoPlayer from './DemoPlayer';
 import { Sparkles, BookOpen, Crown, Zap, Shield, Database, Layout, PenTool, Tv } from 'lucide-react';
 
 interface LandingPageProps {
@@ -35,6 +36,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 videoUrl="https://www.w3schools.com/html/mov_bbb.mp4"
                 logoUrl="/logo.png"
                 navItems={navItems}
+                renderPreview={() => <DemoPlayer />}
             />
 
             {/* Features Section */}
