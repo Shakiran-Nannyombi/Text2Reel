@@ -31,7 +31,6 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
         const onFrameUpdate = ({ detail }: { detail: { frame: number } }) => setCurrentFrame(detail.frame)
         player.addEventListener('play', onPlay)
         player.addEventListener('pause', onPause)
-        // @ts-expect-error - Remotion player frameupdate event
         player.addEventListener('frameupdate', onFrameUpdate)
     }, [])
 
@@ -41,7 +40,7 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
         return () => clearTimeout(timer)
     }, [scenes, attachListeners])
 
-    const handleDownload = async () => {
+    const handleDownload = useCallback(async () => {
         // Export scenes as a JSON "project file" the user can re-import
         const projectData = {
             exportedAt: new Date().toISOString(),
@@ -52,10 +51,11 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `text2reel-project-${Date.now()}.json`
+        const timestamp = Date.now()
+        a.download = `text2reel-project-${timestamp}.json`
         a.click()
         URL.revokeObjectURL(url)
-    }
+    }, [scenes, totalDurationInSeconds])
 
     const togglePlay = () => {
         if (!playerRef.current) return

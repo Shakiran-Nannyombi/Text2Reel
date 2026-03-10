@@ -12,6 +12,8 @@ import SettingsPage from '@/components/text2reel/SettingsPage'
 import LandingPage from '@/components/text2reel/LandingPage'
 import { Toaster, toast } from 'react-hot-toast'
 import { useText2ReelStore, type Scene, type UserAsset } from '@/store/useText2ReelStore'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 
 interface CloudTrack {
   id: string
@@ -35,7 +37,6 @@ import {
   Archive,
   Settings,
   HelpCircle,
-  Expand,
   Share,
   Sparkles,
   LayoutGrid,
@@ -43,7 +44,9 @@ import {
   Pause,
   Upload,
   Music,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react'
 
 const queryClient = new QueryClient()
@@ -62,7 +65,35 @@ function Text2ReelContent() {
   const [mounted, setMounted] = useState(false)
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const previewOverlayRef = useRef<HTMLDivElement>(null)
+
+  useGSAP(() => {
+    if (isMenuOpen) {
+      gsap.to(mobileMenuRef.current, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out', display: 'flex' })
+    } else {
+      gsap.to(mobileMenuRef.current, {
+        y: '-100%', opacity: 0, duration: 0.4, ease: 'power3.in', onComplete: () => {
+          if (mobileMenuRef.current) mobileMenuRef.current.style.display = 'none'
+        }
+      })
+    }
+  }, [isMenuOpen])
+
+  useGSAP(() => {
+    if (isPreviewOpen) {
+      gsap.to(previewOverlayRef.current, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out', display: 'flex' })
+    } else {
+      gsap.to(previewOverlayRef.current, {
+        y: '100%', opacity: 0, duration: 0.4, ease: 'power3.in', onComplete: () => {
+          if (previewOverlayRef.current) previewOverlayRef.current.style.display = 'none'
+        }
+      })
+    }
+  }, [isPreviewOpen])
 
   useEffect(() => {
     setMounted(true)
@@ -207,8 +238,112 @@ function Text2ReelContent() {
       />
       <div className="absolute inset-0 bg-linear-to-t from-background-dark via-transparent to-transparent opacity-40 z-0 pointer-events-none" />
 
+      {/* Mobile Menu Toggle Header */}
+      <div className="lg:hidden absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-40 bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            alt="Text2Reel Logo"
+            width={24}
+            height={24}
+            className="drop-shadow-[0_0_8px_rgba(247,154,122,0.4)] object-contain"
+          />
+          <h1 className="font-display font-bold text-lg text-white">Text2Reel</h1>
+        </div>
+        <button
+          onClick={() => setIsMenuOpen(true)}
+          className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-all"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {/* Full Screen Mobile Menu Overlay (GSAP Animated) */}
+      <div
+        ref={mobileMenuRef}
+        className="fixed inset-0 z-100 bg-background-dark/95 backdrop-blur-xl flex-col p-6 hidden"
+        style={{ transform: 'translateY(-100%)', opacity: 0 }}
+      >
+        <div className="flex items-center justify-between mb-12 border-b border-primary/10 pb-4">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Logo" width={28} height={28} />
+            <h1 className="font-display font-bold text-xl text-white">Menu</h1>
+          </div>
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="p-2 text-slate-400 hover:text-primary transition-all bg-white/5 rounded-full"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <nav className="flex flex-col gap-4 font-display text-lg tracking-widest uppercase font-bold">
+          {[
+            { id: 'editor', icon: <LayoutDashboard />, label: 'Editor' },
+            { id: 'storyboards', icon: <BookOpen />, label: 'Storyboards' },
+            { id: 'assets', icon: <FolderOpen />, label: 'Assets' },
+            { id: 'projects', icon: <Archive />, label: 'Projects' },
+            { id: 'instructions', icon: <HelpCircle />, label: 'Guide' },
+            { id: 'settings', icon: <Settings />, label: 'Settings' }
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveView(item.id as 'editor' | 'storyboards' | 'assets' | 'projects' | 'instructions' | 'settings')
+                setIsMenuOpen(false)
+              }}
+              className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${activeView === item.id ? 'bg-primary text-background-dark shadow-[0_0_20px_rgba(247,154,122,0.4)]' : 'text-slate-300 hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20'}`}
+            >
+              {item.icon} {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="mt-auto pt-8 border-t border-primary/10">
+          <button
+            onClick={() => {
+              setShowWorkspace(false)
+              setIsMenuOpen(false)
+            }}
+            className="flex items-center gap-3 w-full p-4 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all font-bold uppercase tracking-widest text-sm justify-center border border-red-500/20"
+          >
+            <LogOut size={18} /> Exit Workspace
+          </button>
+        </div>
+      </div>
+
+      {/* Full Screen Mobile Preview Overlay (GSAP Animated) */}
+      <div
+        ref={previewOverlayRef}
+        className="fixed inset-0 z-100 bg-background-dark/98 backdrop-blur-2xl flex-col p-6 hidden lg:hidden"
+        style={{ transform: 'translateY(100%)', opacity: 0 }}
+      >
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2">
+            <div className="size-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_red]"></div>
+            <h1 className="font-display font-bold text-lg text-[#FFD9CC] uppercase tracking-widest">Live Preview</h1>
+          </div>
+          <button
+            onClick={() => setIsPreviewOpen(false)}
+            className="p-3 text-slate-400 hover:text-primary transition-all bg-white/5 rounded-full"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center">
+          <div className="relative w-full max-w-[300px] aspect-9/16 atmospheric-glow rounded-[32px] border-8 border-slate-900 shadow-2xl overflow-hidden bg-background-dark">
+            <VideoPreview />
+          </div>
+        </div>
+
+        <div className="p-6 text-center">
+          <p className="text-slate-400 text-xs italic opacity-70">Reviewing Cinematic 9:16 Reel</p>
+        </div>
+      </div>
+
       {/* Side Navigation */}
-      <aside className="w-20 lg:w-64 border-r border-primary/10 flex flex-col glass-panel z-50 overflow-hidden">
+      <aside className="hidden lg:flex w-64 border-r border-primary/10 flex-col glass-panel z-50 overflow-hidden shrink-0">
         <div className="p-6 flex items-center gap-3">
           <div className="size-10 rounded-xl flex items-center justify-center">
             <Image
@@ -261,6 +396,10 @@ function Text2ReelContent() {
 
           <div className="pt-6 mt-6 border-t border-primary/5">
             <p className="px-3 text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 hidden lg:block">Workspace</p>
+            <div onClick={() => setActiveView('instructions')} className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'instructions' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'}`}>
+              <HelpCircle size={20} />
+              <span className="text-sm font-medium hidden lg:block">User Guide</span>
+            </div>
             <div onClick={() => setActiveView('settings')} className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'settings' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'}`}>
               <Settings size={20} />
               <span className="text-sm font-medium hidden lg:block">Settings</span>
@@ -286,7 +425,7 @@ function Text2ReelContent() {
       </aside>
 
       {/* Main Workspace Area */}
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative z-10">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative z-10 pt-16 lg:pt-0">
         {activeView === 'editor' ? (
           <section className="flex-1 flex flex-col overflow-y-auto border-r border-primary/10 p-6 lg:p-8 space-y-8 atmospheric-glow relative z-10 custom-scrollbar shadow-inner">
             {/* Header Info */}
@@ -528,7 +667,6 @@ function Text2ReelContent() {
                   <li>Click the <strong>&quot;Paste Selected Asset&quot;</strong> button now visible on any scene to apply your chosen image.</li>
                 </ol>
               </div>
-
               <div className="glass-panel p-6 rounded-2xl border border-primary/20">
                 <h3 className="text-primary font-display font-semibold uppercase tracking-widest text-sm mb-4">4. Video Preview & Export</h3>
                 <p className="text-slate-300 text-sm leading-relaxed mb-4">
@@ -546,8 +684,19 @@ function Text2ReelContent() {
           <SettingsPage />
         ) : null}
 
-        {/* Right Panel: Preview Player */}
-        <section className="w-full lg:w-[500px] bg-black/40 flex flex-col items-center justify-center p-8 lg:p-12 border-l border-primary/10 relative z-10">
+        {/* Floating Mobile Preview Toggle */}
+        {activeView === 'editor' && !isPreviewOpen && (
+          <button
+            onClick={() => setIsPreviewOpen(true)}
+            className="lg:hidden fixed bottom-6 right-6 z-40 size-16 rounded-full bg-primary text-background-dark shadow-[0_0_20px_rgba(247,154,122,0.4)] flex items-center justify-center active:scale-90 transition-all border-4 border-background-dark"
+            title="Open Preview"
+          >
+            <Play size={28} fill="currentColor" />
+          </button>
+        )}
+
+        {/* Right Panel: Preview Player - Hidden on mobile entirely */}
+        <section className="hidden lg:flex w-full lg:w-[500px] bg-black/40 flex-col items-center justify-center p-8 lg:p-12 border-l border-primary/10 relative z-10 shrink-0">
           <div className="relative w-full max-w-[320px] aspect-9/16 atmospheric-glow rounded-[40px] border-12 border-slate-900 shadow-2xl overflow-hidden bg-background-dark">
             <VideoPreview />
 
