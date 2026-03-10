@@ -15,8 +15,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Text2Reel | Cinematic AI Video Generator",
   description: "Transform your vision into rhythmic reels with neural AI.",
+  themeColor: "#0f0518",
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/logo.png" },
+      { url: "/logo.png", media: "(prefers-color-scheme: light)" },
+      { url: "/logo.png", media: "(prefers-color-scheme: dark)" },
+    ],
     apple: "/logo.png",
   },
 };

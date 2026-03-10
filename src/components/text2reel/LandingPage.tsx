@@ -68,6 +68,8 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 }
                 tagline="The most efficient bridge between human imagination and rhythmic cinematic reality ever built. Turn any story into a high-octane 9:16 reel instantly."
                 buttonText="Ignite Vision"
+                imageUrl="/text2reel.png"
+                videoUrl="/demo1.mp4"
                 logoUrl="/logo.png"
                 navItems={navItems}
                 renderPreview={() => <DemoVideoPlayer />}

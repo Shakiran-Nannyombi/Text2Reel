@@ -252,7 +252,7 @@ const HeroSection = ({
     }, [showVideo, videoUrl]);
 
     const handlePlayButtonClick = () => {
-        if (videoUrl) {
+        if (videoUrl || renderPreview) {
             setShowVideo(true);
         }
     };
@@ -260,13 +260,14 @@ const HeroSection = ({
     return (
         <div className="bg-background text-foreground min-h-screen flex flex-col relative overflow-hidden">
             <nav className="w-full max-w-5xl mx-auto flex justify-between items-center px-6 sm:px-12 py-6 text-sm relative z-30">
-                <div className="relative h-8 w-32 flex items-center">
+                <div className="relative h-20 w-80 flex items-center">
                     {logoUrl ? (
                         <Image
                             src={logoUrl}
                             alt="Logo"
-                            width={128}
-                            height={32}
+                            width={320}
+                            height={80}
+                            style={{ height: 'auto', width: '100%' }}
                             className="object-contain"
                             priority
                         />
@@ -362,7 +363,7 @@ const HeroSection = ({
 
                 <div className="mt-20 lg:mt-32 w-full max-w-6xl mx-auto overflow-hidden px-4">
                     <div className="bg-primary/5 rounded-[3rem] p-3 border border-primary/10 shadow-3xl atmospheric-glow">
-                        <div className="relative h-72 sm:h-96 md:h-[500px] lg:h-[650px] rounded-[2.5rem] bg-card overflow-hidden border border-white/5 shadow-2xl">
+                        <div className="relative h-96 sm:h-[500px] md:h-[650px] lg:h-[800px] rounded-[2.5rem] bg-card overflow-hidden border border-white/5 shadow-2xl">
                             {imageUrl && (
                                 <Image
                                     src={imageUrl}
@@ -373,9 +374,9 @@ const HeroSection = ({
                                 />
                             )}
                             {renderPreview ? (
-                                <div className={`w-full h-full object-cover transition-opacity duration-700 ${showVideo ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                                <div className={`w-full h-full transition-opacity duration-700 ${showVideo ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
                                     }`}>
-                                    {renderPreview()}
+                                    {showVideo && renderPreview()}
                                 </div>
                             ) : videoUrl && (
                                 <video
@@ -389,7 +390,7 @@ const HeroSection = ({
                                         }`}
                                 />
                             )}
-                            {!showVideo && videoUrl && imageUrl && (
+                            {!showVideo && (videoUrl || renderPreview) && imageUrl && (
                                 <button
                                     onClick={handlePlayButtonClick}
                                     className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-all duration-500 group"
