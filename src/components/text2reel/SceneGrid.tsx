@@ -6,7 +6,7 @@ import Image from 'next/image'
 import IconRenderer from './IconRenderer'
 
 export default function SceneGrid() {
-    const { scenes, updateScene } = useText2ReelStore()
+    const { scenes, updateScene, selectedAssetUrl, setSelectedAssetUrl } = useText2ReelStore()
 
     if (scenes.length === 0) {
         return (
@@ -85,12 +85,34 @@ export default function SceneGrid() {
 
                         <div className="flex items-center justify-between pt-3 border-t border-primary/10 mt-auto">
                             <div className="flex items-center gap-3">
-                                <EditNote fontSize="small" className="text-slate-500 hover:text-primary transition-colors cursor-pointer" />
+                                <button
+                                    onClick={(e) => { e.currentTarget.parentElement?.parentElement?.parentElement?.querySelector('textarea')?.focus() }}
+                                    className="text-slate-500 hover:text-primary transition-colors cursor-pointer"
+                                    title="Edit Scene Text"
+                                >
+                                    <EditNote fontSize="small" />
+                                </button>
+                                {selectedAssetUrl && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            updateScene(index, { ...scene, imageUrl: selectedAssetUrl });
+                                            setSelectedAssetUrl(null); // Clear selection after pasting
+                                        }}
+                                        className="text-[9px] font-black tracking-widest uppercase bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/30 hover:bg-primary hover:text-background-dark hover:shadow-[0_0_10px_#f79a7a] transition-all cursor-pointer z-20 absolute top-4 right-14"
+                                    >
+                                        Paste Image
+                                    </button>
+                                )}
                                 <div className="flex items-center gap-1.5">
-                                    <div
-                                        className="size-3 rounded-full border border-white/20"
-                                        style={{ backgroundColor: scene.color }}
-                                    ></div>
+                                    <label title="Edit Scene Color" className="cursor-pointer size-3 rounded-full border border-white/20 relative overflow-hidden flex items-center justify-center p-0 m-0" style={{ backgroundColor: scene.color }}>
+                                        <input
+                                            type="color"
+                                            value={scene.color}
+                                            onChange={(e) => updateScene(index, { ...scene, color: e.target.value })}
+                                            className="absolute opacity-0 w-[200%] h-[200%] cursor-pointer p-0 m-0"
+                                        />
+                                    </label>
                                     <span className="text-[10px] font-mono text-slate-500 uppercase">{scene.animationStyle}</span>
                                 </div>
                             </div>

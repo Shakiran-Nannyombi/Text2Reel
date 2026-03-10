@@ -7,7 +7,22 @@ import DescriptionInput from '@/components/text2reel/DescriptionInput'
 import SceneGrid from '@/components/text2reel/SceneGrid'
 import VideoPreview from '@/components/text2reel/VideoPreview'
 import LandingPage from '@/components/text2reel/LandingPage'
-import { useText2ReelStore } from '@/store/useText2ReelStore'
+import { useText2ReelStore, type Scene, type UserAsset } from '@/store/useText2ReelStore'
+
+interface CloudTrack {
+  id: string
+  name: string
+  preview_url?: string
+  artists?: { name: string }[]
+  [key: string]: unknown
+}
+
+interface CloudImage {
+  id: string
+  urls: { small: string }
+  alt_description: string
+  [key: string]: unknown
+}
 import { useState, useRef, useEffect } from 'react'
 import {
   Dashboard,
@@ -28,15 +43,23 @@ import {
 const queryClient = new QueryClient()
 
 function Text2ReelContent() {
-  const { scenes, setScenes, updateScene, setIsLoading, userAssets, addUserAsset, activeAudioTrack, setActiveAudioTrack } = useText2ReelStore()
+  const {
+    scenes, setScenes,
+    activeAudioTrack, setActiveAudioTrack,
+    userAssets, addUserAsset,
+    selectedAssetUrl, setSelectedAssetUrl,
+    updateScene, setIsLoading
+  } = useText2ReelStore()
   const [showWorkspace, setShowWorkspace] = useState(false)
-  const [activeView, setActiveView] = useState<'editor' | 'storyboards' | 'assets'>('editor')
+  const [activeView, setActiveView] = useState<'editor' | 'storyboards' | 'assets' | 'instructions'>('editor')
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Cloud Search State
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
-  const [cloudAssets, setCloudAssets] = useState<{ tracks: any[], images: any[] }>({ tracks: [], images: [] })
+  const [cloudAssets, setCloudAssets] = useState<{ tracks: CloudTrack[], images: CloudImage[] }>({ tracks: [], images: [] })
 
   const handleCloudSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,6 +116,34 @@ function Text2ReelContent() {
     }
   }, [showWorkspace])
 
+  // Save the current project to SQLite via Next.js API route (no separate backend needed)
+  const handleSaveProject = async () => {
+    if (scenes.length === 0) return
+    setIsSaving(true)
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: savedProjectId ?? undefined,
+          name: 'My Reel',
+          scenes,
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSavedProjectId(data.project.id)
+        alert(`✅ Project saved to SQLite! (ID: ${data.project.id.slice(0, 8)}…)`)
+      } else {
+        alert('Failed to save: ' + (data.error ?? 'Unknown error'))
+      }
+    } catch {
+      alert('Could not connect to the save API.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const mutation = useMutation({
     mutationFn: async (description: string) => {
       const res = await fetch('/api/generate-scenes', {
@@ -106,7 +157,7 @@ function Text2ReelContent() {
     onMutate: () => {
       setIsLoading(true)
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: { scenes: Scene[] }) => {
       console.log('Scenes generated:', data)
       setScenes(data.scenes)
       setIsLoading(false)
@@ -157,7 +208,7 @@ function Text2ReelContent() {
           >
             <Dashboard fontSize="small" />
             <span className="text-sm font-medium hidden lg:block">Editor</span>
-          </div>
+          </div >
           <div
             onClick={() => setActiveView('storyboards')}
             className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'storyboards' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'
@@ -177,13 +228,16 @@ function Text2ReelContent() {
 
           <div className="pt-6 mt-6 border-t border-primary/5">
             <p className="px-3 text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 hidden lg:block">Workspace</p>
+            <div
+              onClick={() => setActiveView('instructions')}
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all ${activeView === 'instructions' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-slate-400 hover:bg-primary/5 hover:text-primary'}`}
+            >
+              <Help fontSize="small" />
+              <span className="text-sm font-medium hidden lg:block">Instructions</span>
+            </div>
             <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:bg-primary/5 transition-colors cursor-pointer">
               <Settings fontSize="small" />
               <span className="text-sm font-medium hidden lg:block">Settings</span>
-            </div>
-            <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-slate-400 hover:bg-primary/5 transition-colors cursor-pointer">
-              <Help fontSize="small" />
-              <span className="text-sm font-medium hidden lg:block">Support</span>
             </div>
           </div>
         </nav>
@@ -223,11 +277,12 @@ function Text2ReelContent() {
                 <p className="text-slate-400 mt-1 italic">Transform text into rhythmic reels</p>
               </div>
               <button
+                onClick={handleSaveProject}
+                disabled={scenes.length === 0 || isSaving}
                 className="bg-primary hover:bg-[#FFD9CC] text-background-dark font-display font-black px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
-                disabled={scenes.length === 0}
               >
                 <IosShare fontSize="small" />
-                Export Reel
+                {isSaving ? 'Saving…' : savedProjectId ? 'Update Save' : 'Save Video'}
               </button>
             </div>
 
@@ -284,8 +339,15 @@ function Text2ReelContent() {
                       {scene.imageUrl ? (
                         <Image src={scene.imageUrl} alt={`Scene ${i + 1}`} fill className="object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: scene.color }}>
-                          <span className="text-white/30 font-black text-2xl">S{i + 1}</span>
+                        <div className="w-full h-full flex items-center justify-center relative group/color transition-colors" style={{ backgroundColor: scene.color }}>
+                          <span className="text-white/30 font-black text-2xl z-10 pointer-events-none">S{i + 1}</span>
+                          <input
+                            type="color"
+                            title="Edit Background Color"
+                            value={scene.color}
+                            onChange={(e) => updateScene(i, { ...scene, color: e.target.value })}
+                            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-0"
+                          />
                         </div>
                       )}
                     </div>
@@ -293,6 +355,18 @@ function Text2ReelContent() {
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black tracking-[0.2em] text-primary uppercase border border-primary/20 px-2 py-1 rounded bg-primary/5">Scene 0{i + 1}</span>
                         <div className="flex items-center gap-2">
+                          {selectedAssetUrl && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateScene(i, { ...scene, imageUrl: selectedAssetUrl });
+                                setSelectedAssetUrl(null);
+                              }}
+                              className="text-[9px] font-black tracking-widest uppercase bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/30 hover:bg-primary hover:text-background-dark hover:shadow-[0_0_10px_#f79a7a] transition-all cursor-pointer mr-2"
+                            >
+                              Paste Image
+                            </button>
+                          )}
                           <input
                             type="number"
                             value={scene.duration}
@@ -315,7 +389,7 @@ function Text2ReelContent() {
               </div>
             )}
           </section>
-        ) : (
+        ) : activeView === 'assets' ? (
           <section className="flex-1 flex flex-col overflow-y-auto border-r border-primary/10 p-6 lg:p-8 space-y-8 atmospheric-glow relative z-10 custom-scrollbar shadow-inner">
             <div className="flex justify-between items-start border-b border-primary/10 pb-6">
               <div className="flex items-center gap-3">
@@ -366,12 +440,11 @@ function Text2ReelContent() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {/* Render Cloud Tracks if available, else local */}
-                  {(cloudAssets.tracks.length > 0 ? cloudAssets.tracks : userAssets.filter(a => a.type === 'audio')).map((audio: any) => {
-                    const isCloud = !!audio.preview_url || !!audio.artists;
+                  {(cloudAssets.tracks.length > 0 ? cloudAssets.tracks : userAssets.filter(a => a.type === 'audio')).map((audio: CloudTrack | UserAsset) => {
+                    const isCloud = 'preview_url' in audio || 'artists' in audio;
                     const trackName = isCloud ? String(audio.name) : String(audio.name);
-                    const artistName = isCloud ? String(audio.artists?.[0]?.name) : 'Local Asset';
-                    const audioUrl = isCloud ? audio.preview_url : audio.url;
-                    const id = isCloud ? audio.id : audio.id;
+                    const artistName = isCloud && 'artists' in audio && audio.artists ? String(audio.artists[0]?.name) : 'Local Asset';
+                    const id = audio.id;
 
                     return (
                       <div
@@ -404,8 +477,12 @@ function Text2ReelContent() {
                 </h3>
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
                   {/* Cloud Images */}
-                  {cloudAssets.images.map((img: any) => (
-                    <div key={img.id} className="relative aspect-square glass-panel rounded-xl overflow-hidden group border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                  {cloudAssets.images.map((img: CloudImage) => (
+                    <div
+                      key={img.id}
+                      onClick={() => setSelectedAssetUrl(img.urls.small)}
+                      className={`relative aspect-square glass-panel rounded-xl overflow-hidden group border cursor-pointer transition-all ${selectedAssetUrl === img.urls.small ? 'border-primary shadow-[0_0_15px_rgba(247,154,122,0.4)] scale-105' : 'border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:border-primary/50'}`}
+                    >
                       <Image src={img.urls.small} alt={img.alt_description || 'Unsplash'} fill className="object-cover transition-transform group-hover:scale-110" />
                       <div className="absolute top-1 right-1 bg-blue-500/80 backdrop-blur-md px-1.5 py-0.5 rounded text-[7px] text-white uppercase font-bold tracking-widest">Unsplash</div>
                     </div>
@@ -413,7 +490,11 @@ function Text2ReelContent() {
 
                   {/* Uploaded Visuals */}
                   {userAssets.filter(a => a.type === 'image' || a.type === 'video').map((asset) => (
-                    <div key={asset.id} className="relative aspect-square glass-panel rounded-xl overflow-hidden group border border-primary/20 shadow-[0_0_15px_rgba(247,154,122,0.1)]">
+                    <div
+                      key={asset.id}
+                      onClick={() => setSelectedAssetUrl(asset.url)}
+                      className={`relative aspect-square glass-panel rounded-xl overflow-hidden group border cursor-pointer transition-all ${selectedAssetUrl === asset.url ? 'border-primary shadow-[0_0_15px_rgba(247,154,122,0.4)] scale-105' : 'border-primary/20 shadow-[0_0_15px_rgba(247,154,122,0.1)] hover:border-primary/50'}`}
+                    >
                       {asset.type === 'image' ? (
                         <Image src={asset.url} alt={asset.name} fill className="object-cover transition-transform group-hover:scale-110" />
                       ) : (
@@ -427,7 +508,11 @@ function Text2ReelContent() {
 
                   {/* Generated Imagery */}
                   {scenes.map((scene, i) => scene.imageUrl && (
-                    <div key={`asset-${i}`} className="relative aspect-square glass-panel rounded-xl overflow-hidden group cursor-pointer border border-primary/10 hover:border-primary/40">
+                    <div
+                      key={`asset-${i}`}
+                      onClick={() => setSelectedAssetUrl(scene.imageUrl)}
+                      className={`relative aspect-square glass-panel rounded-xl overflow-hidden group cursor-pointer border transition-all ${selectedAssetUrl === scene.imageUrl ? 'border-primary shadow-[0_0_15px_rgba(247,154,122,0.4)] scale-105' : 'border-primary/10 hover:border-primary/40'}`}
+                    >
                       <Image src={scene.imageUrl} alt={`GenAsset ${i}`} fill className="object-cover opacity-60 group-hover:opacity-100 transition-all hover:scale-110" />
                       <div className="absolute top-1 right-1 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[7px] text-slate-300 uppercase font-bold tracking-widest border border-white/10">Gen</div>
                     </div>
@@ -436,7 +521,62 @@ function Text2ReelContent() {
               </div>
             </div>
           </section>
-        )}
+        ) : activeView === 'instructions' ? (
+          <section className="flex-1 flex flex-col overflow-y-auto border-r border-primary/10 p-6 lg:p-12 space-y-8 atmospheric-glow relative z-10 custom-scrollbar shadow-inner">
+            <div className="flex justify-between items-start border-b border-primary/10 pb-6">
+              <div className="flex items-center gap-3">
+                <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
+                  <Help className="text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-[#FFD9CC] uppercase tracking-widest">Guide</h2>
+                  <p className="text-slate-400 text-xs italic">User Guide to editing and previewing your reels</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="prose prose-invert max-w-none space-y-6">
+              <div className="glass-panel p-6 rounded-2xl border border-primary/20">
+                <h3 className="text-primary font-display font-semibold uppercase tracking-widest text-sm mb-4">1. Generating the Vision</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                  Navigate to the <strong>Editor</strong> tab. Type an idea like <i>&quot;A cinematic journey through a cyberpunk city&quot;</i> and submit. Text2Reel connects to the Groq API to construct a storyboard sequence with animation details, text overlays, and duration.
+                </p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-primary/20">
+                <h3 className="text-primary font-display font-semibold uppercase tracking-widest text-sm mb-4">2. Modifying Storyboards</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                  In both the <strong>Editor</strong> and <strong>Storyboards</strong> views, the breakdown of scenes is presented.
+                </p>
+                <ul className="list-disc list-inside text-sm text-slate-400 space-y-2">
+                  <li><strong>Edit Text:</strong> Click directly into the text area of any scene block to edit the subtitle text inline.</li>
+                  <li><strong>Edit Timing:</strong> Click on the numeric <code>&lt;input&gt;</code> (e.g. <code>2.5s</code>) to fine-tune exactly how many seconds the scene lasts.</li>
+                </ul>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-primary/20">
+                <h3 className="text-primary font-display font-semibold uppercase tracking-widest text-sm mb-4">3. Adding Custom Images</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                  By default, AI may insert generated imagery. If you want to use specific photos:
+                </p>
+                <ol className="list-decimal list-inside text-sm text-slate-400 space-y-2">
+                  <li>Go to the <strong>Assets</strong> tab.</li>
+                  <li>Search for an image (Unsplash) or upload a local image.</li>
+                  <li><strong>Click the image</strong> in the Assets grid to select it (it will glow orange).</li>
+                  <li>Return to the <strong>Editor</strong> or <strong>Storyboards</strong> tab.</li>
+                  <li>Click the <strong>&quot;Paste Selected Asset&quot;</strong> button now visible on any scene to apply your chosen image.</li>
+                </ol>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-primary/20">
+                <h3 className="text-primary font-display font-semibold uppercase tracking-widest text-sm mb-4">4. Video Preview & Export</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                  The right panel contains a real-time <a href="https://www.remotion.dev/" className="text-blue-400 underline" target="_blank">Remotion</a> player. Use the Play/Pause, Rewind, and Skip buttons to review your reel. Once satisfied, external tools can be integrated with the &quot;Export Reel&quot; button to render the final MP4.
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {/* Right Panel: Preview Player */}
         <section className="w-full lg:w-[500px] bg-black/40 flex flex-col items-center justify-center p-8 lg:p-12 border-l border-primary/10 relative z-10">

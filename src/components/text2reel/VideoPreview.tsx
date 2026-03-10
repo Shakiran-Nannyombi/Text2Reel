@@ -110,7 +110,12 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
                         </div>
 
                         <div className="flex items-center justify-center gap-8">
-                            <button className="text-slate-400 hover:text-primary transition-all active:scale-90">
+                            <button onClick={() => {
+                                if (playerRef.current) {
+                                    const currentFrame = playerRef.current.getCurrentFrame();
+                                    playerRef.current.seekTo(Math.max(0, currentFrame - 30));
+                                }
+                            }} className="text-slate-400 hover:text-primary transition-all active:scale-90">
                                 <SkipPrevious />
                             </button>
                             <button
@@ -123,7 +128,12 @@ export default function VideoPreview({ objectFit = 'contain' }: { objectFit?: 'c
                                     <PlayArrow sx={{ fontSize: 32 }} className="translate-x-0.5" />
                                 )}
                             </button>
-                            <button className="text-slate-400 hover:text-primary transition-all active:scale-90">
+                            <button onClick={() => {
+                                if (playerRef.current) {
+                                    const currentFrame = playerRef.current.getCurrentFrame();
+                                    playerRef.current.seekTo(Math.min(durationInFrames - 1, currentFrame + 30));
+                                }
+                            }} className="text-slate-400 hover:text-primary transition-all active:scale-90">
                                 <SkipNext />
                             </button>
                         </div>

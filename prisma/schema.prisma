@@ -1,0 +1,18 @@
+// Prisma schema for Text2Reel — SQLite local persistence
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String   @default("Untitled Reel")
+  scenes    String   // JSON string of Scene[] array
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
