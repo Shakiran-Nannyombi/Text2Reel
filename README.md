@@ -1,46 +1,72 @@
-# 🎬 Text2Reel: AI Cinematic Storyboarder
+# Text2Reel: AI Cinematic Storyboarder
 
-> "Turning text into rhythmic visual narratives, one prompt at a time."
+Text2Reel is a high-fidelity platform designed for the intelligent generation of cinematic video scenes from natural language prompts. By bridging the gap between imagination and rhythmic visual reality, it enables creators to transform concepts into frame-perfect storyboards with dynamic text overlays and choreographed animations.
 
-**Text2Reel** is a high-fidelity AI video scene generator. It transforms natural language descriptions into a sequence of choreographed scenes, complete with synced text overlays, dynamic background animations, and custom icons.
+![Text2Reel Banner](./public/text2reel.png)
 
-![Text2Reel Preview](/text2reel.png)
+## Overview
 
-## 🌌 The Sanctuary
-Originally part of *The Arcade*, Text2Reel has now evolved into its own standalone sanctuary. It's built for speed, cinematic depth, and seamless AI collaboration.
+Originally conceptualized as a modular component, Text2Reel has evolved into a standalone production environment focused on cinematic depth and seamless AI collaboration. It leverages cutting-edge LLMs and advanced browser-based rendering to deliver a professional-grade creative workflow.
 
-### ✨ Key Features
-- **🧠 Neural Scene Generation**: Powered by **Llama 3.3 (via Groq)** to intelligently break down your vision into specific scenes.
-- **🎬 Live Cinematic Preview**: Built on **Remotion**, providing a frame-perfect rendering engine within the browser.
-- **🛠️ High-FID Editor**: A granular scene table to tweak animations, colors, icons, and timing.
-- **⚡ Performance First**: Zero-latency state management with **Zustand** and optimized layouts with **Tailwind v4**.
+### Core Capabilities
 
-## 🚀 Getting Started
+*   **Neural Scene Generation**: Utilizing Llama 3.3 (via Groq) to intelligently decompose narrative prompts into granular, actionable scene definitions.
+*   **Live Cinematic Preview**: An integrated high-performance rendering engine built on Remotion for real-time, frame-accurate previews.
+*   **High-Fidelity Editor**: A specialized interface for fine-tuning scene attributes, including typography, timing, and visual transition logic.
+*   **Performance Engineering**: Optimized with Zustand for zero-latency state management and Tailwind CSS for responsive, performant layouts.
 
-1. **Clone & Install**:
-   ```bash
-   npm install
-   ```
+## Branding
 
-2. **Fuel the AI**:
-   Create a `.env.local` file and add your Groq API key:
-   ```env
-   GROQ_API_KEY=your_key_here
-   ```
+![Text2Reel Logo](./public/logo.png)
 
-3. **Launch the Engine**:
-   ```bash
-   npm run dev
-   ```
+*A premium product designed by the Context Engineering team.*
 
-## 🧪 Technical DNA
-- **Framework**: Next.js 15+
-- **Video Engine**: Remotion
-- **AI**: Groq SDK (Llama 3.3)
-- **UI Architecture**: MUI + Tailwind CSS v4 + Framer Motion
-- **State**: Zustand + React Table & Form
+## Deployment & Getting Started
+
+### Prerequisites
+
+*   Node.js 18+
+*   Groq API Key (for neural processing)
+
+### Local Development
+
+1.  **Clone the Repository and Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+2.  **Configure Environment Variables**:
+    Create a `.env.local` file in the root directory:
+    ```env
+    GROQ_API_KEY=your_processing_key_here
+    ```
+
+3.  **Synchronize Database (Prisma)**:
+    ```bash
+    npx prisma generate
+    ```
+
+4.  **Initialize Development Server**:
+    ```bash
+    npm run dev
+    ```
+
+### Production Build
+
+The production build automatically synchronizes the database schema before compilation:
+```bash
+npm run build
+```
+
+## Technical Architecture
+
+*   **Framework**: Next.js 15 (App Router)
+*   **Rendering Engine**: Remotion
+*   **Inference**: Groq SDK (Llama 3.3)
+*   **Design System**: MUI Core + Tailwind CSS + Framer Motion
+*   **State Management**: Zustand
 
 ---
 
-Created with passion by **Shakiran**.  
-*UI Gardener • Cinematic Engineer*
+Developed by **Shakiran**
+*Systems & Experience Engineer*

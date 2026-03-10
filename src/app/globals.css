@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --font-inter: var(--font-inter);
   --font-outfit: var(--font-outfit);
@@ -10,6 +14,14 @@
 
   --background: #0f0518;
   --foreground: #FFD9CC;
+  --muted: #1a0b2e;
+  --muted-foreground: #a1a1aa;
+  --accent: #2e1065;
+  --accent-foreground: #FFD9CC;
+  --card: #160724;
+  --card-foreground: #FFD9CC;
+  --border: rgba(247, 154, 122, 0.2);
+  --ring: #f79878;
 }
 
 @theme {
